@@ -528,7 +528,7 @@ function renderParamForm(report) {
     } else if (p.type === 'date') {
       control = `<input type="date" class="param-control" id="param-${p.name}" value="${p.default || ''}"/>`;
     } else {
-      control = `<input type="${p.type || 'text'}" class="param-control" id="param-${p.name}" value="${p.default || ''" placeholder="${p.label}"/>`;
+      control = `<input type="${p.type || 'text'}" class="param-control" id="param-${p.name}" value="${p.default || ''}" placeholder="${p.label}"/>`;
     }
     return `<div class="param-group">
       <label class="param-label">${p.label}${required}</label>
