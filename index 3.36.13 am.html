@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ERP Report Builder</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --navy: #1a1a2e;
+  --amber: #f0a500;
+  --amber-light: #fff8e7;
+  --teal: #0f8b8d;
+  --red-soft: #e84855;
+  --bg: #f0efe9;
+  --card: #ffffff;
+  --border: #e0ddd6;
+  --text: #1a1a2e;
+  --muted: #7a7a8a;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+/* ── Top Bar ── */
+.topbar {
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 56px;
+  border-bottom: 3px solid var(--amber);
+}
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.topbar-icon {
+  width: 32px; height: 32px;
+  background: var(--amber);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px;
+  font-size: 16px;
+}
+.topbar-title { color: #fff; font-size: 15px; font-weight: 700; letter-spacing: 0.3px; }
+.topbar-sub { color: var(--amber); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-family: var(--mono); }
+.topbar-right { color: #666; font-size: 11px; font-family: var(--mono); }
+
+/* ── Layout ── */
+.layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  min-height: calc(100vh - 59px);
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  background: #fff;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar-section {
+  padding: 20px 18px 0;
+}
+
+.sidebar-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+
+/* Report selector */
+.report-list { display: flex; flex-direction: column; gap: 4px; }
+
+.report-card {
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.report-card:hover { border-color: var(--amber); background: var(--amber-light); }
+.report-card.active {
+  border-color: var(--amber);
+  background: var(--amber-light);
+  box-shadow: inset 3px 0 0 var(--amber);
+}
+.report-card .rc-title { font-size: 12.5px; font-weight: 600; color: var(--navy); }
+.report-card .rc-id { font-size: 9px; color: var(--muted); font-family: var(--mono); margin-top: 2px; }
+.report-card .rc-desc { font-size: 11px; color: var(--muted); margin-top: 5px; line-height: 1.4; }
+
+/* Divider */
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* Param form */
+.param-form { padding: 0 18px 20px; flex: 1; }
+
+.param-group { margin-bottom: 14px; }
+.param-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  margin-bottom: 5px;
+  display: block;
+}
+.param-required { color: var(--red-soft); margin-left: 2px; }
+
+.param-control {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--navy);
+  background: #fafaf8;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.param-control:focus { border-color: var(--amber); background: #fff; }
+
+select.param-control { cursor: pointer; }
+
+/* Action buttons */
+.btn-group { display: flex; flex-direction: column; gap: 8px; padding: 0 18px 20px; }
+
+.btn {
+  padding: 11px 16px;
+  border: none;
+  border-radius: 5px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.3px;
+}
+.btn-primary {
+  background: var(--navy);
+  color: #fff;
+}
+.btn-primary:hover { background: #2a2a4e; transform: translateY(-1px); }
+
+.btn-amber {
+  background: var(--amber);
+  color: var(--navy);
+}
+.btn-amber:hover { background: #e09800; }
+
+.btn-outline {
+  background: transparent;
+  color: var(--navy);
+  border: 1.5px solid var(--border);
+}
+.btn-outline:hover { border-color: var(--navy); }
+
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+/* SQL preview toggle */
+.sql-toggle {
+  margin: 0 18px 12px;
+  font-size: 10px;
+  color: var(--teal);
+  cursor: pointer;
+  font-family: var(--mono);
+  letter-spacing: 0.3px;
+}
+.sql-toggle:hover { text-decoration: underline; }
+
+/* ── Main Panel ── */
+.main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Toolbar */
+.toolbar {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.toolbar-title { font-size: 14px; font-weight: 700; flex: 1; }
+.toolbar-meta { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+
+.tab-group {
+  display: flex;
+  border: 1.5px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.tab {
+  padding: 7px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #fff;
+  color: var(--muted);
+  border: none;
+  transition: all 0.15s;
+}
+.tab.active { background: var(--navy); color: #fff; }
+.tab:hover:not(.active) { background: var(--bg); }
+
+/* Content area */
+.content {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+}
+
+/* Welcome state */
+.welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--muted);
+  text-align: center;
+  gap: 12px;
+}
+.welcome-icon { font-size: 56px; opacity: 0.3; }
+.welcome h2 { font-size: 18px; color: var(--navy); opacity: 0.4; }
+.welcome p { font-size: 13px; max-width: 320px; line-height: 1.5; }
+
+/* Loading */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px;
+  color: var(--muted);
+}
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--amber);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Stats bar */
+.stats-bar {
+  display: flex;
+  gap: 0;
+  margin-bottom: 20px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+}
+.stat-item {
+  flex: 1;
+  padding: 14px 18px;
+  border-right: 1px solid var(--border);
+  text-align: center;
+}
+.stat-item:last-child { border-right: none; }
+.stat-item .sn {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+  font-family: var(--mono);
+}
+.stat-item .sl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
+
+/* Data table */
+.table-wrap {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+thead { background: var(--navy); color: #fff; }
+thead th {
+  padding: 11px 14px;
+  text-align: left;
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+thead th:hover { background: #2a2a4e; }
+thead th.sort-asc::after { content: ' ↑'; color: var(--amber); }
+thead th.sort-desc::after { content: ' ↓'; color: var(--amber); }
+
+tbody tr:nth-child(even) { background: #f9f9f7; }
+tbody tr:hover { background: #fffbee; }
+td {
+  padding: 9px 14px;
+  border-bottom: 1px solid #f0f0ea;
+  font-size: 12px;
+  vertical-align: middle;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--mono);
+}
+.badge-delivered    { background: #d4edda; color: #155724; }
+.badge-in-progress  { background: #fff3cd; color: #856404; }
+.badge-pending      { background: #fde8e8; color: #a01c2b; }
+
+.empty-row td { text-align: center; padding: 48px; color: var(--muted); }
+
+/* SQL panel */
+.sql-panel {
+  background: var(--navy);
+  color: #e8e8e8;
+  padding: 20px 24px;
+  border-radius: 7px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid #333;
+}
+.sql-keyword { color: #f0a500; font-weight: 600; }
+.sql-string  { color: #98d8c8; }
+.sql-comment { color: #555; }
+
+/* Error */
+.error-box {
+  background: #fde8e8;
+  border: 1px solid #f5c6c6;
+  border-radius: 7px;
+  padding: 20px 24px;
+  color: var(--red-soft);
+  font-size: 13px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-icon">🗂</div>
+    <div>
+      <div class="topbar-title">ERP Report Builder</div>
+      <div class="topbar-sub">BIRT Analogue · Parameterised SQL Reports</div>
+    </div>
+  </div>
+  <div class="topbar-right" id="clock">—</div>
+</div>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Available Reports</div>
+      <div class="report-list" id="reportList">
+        <div style="color:var(--muted);font-size:12px;padding:12px 0;">Loading reports…</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Report Parameters</div>
+    </div>
+    <div class="param-form" id="paramForm">
+      <div style="color:var(--muted);font-size:12px;padding:4px;">Select a report to configure parameters.</div>
+    </div>
+
+    <div class="sql-toggle" id="sqlToggle" style="display:none;" onclick="toggleSQL()">
+      ⌘ Preview SQL Query
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" id="runBtn" onclick="runReport('json')" disabled>
+        ▶ Run Report
+      </button>
+      <button class="btn btn-amber" id="htmlBtn" onclick="runReport('html')" disabled>
+        ⬡ View HTML Report
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="toolbar" id="toolbar">
+      <div class="toolbar-title" id="reportTitle">ERP Report Builder</div>
+      <div class="toolbar-meta" id="reportMeta"></div>
+      <div class="tab-group" id="tabGroup" style="display:none;">
+        <button class="tab active" onclick="setTab('table')">Table</button>
+        <button class="tab" onclick="setTab('sql')">SQL</button>
+        <button class="tab" onclick="setTab('summary')">Summary</button>
+      </div>
+    </div>
+
+    <div class="content" id="content">
+      <div class="welcome">
+        <div class="welcome-icon">📊</div>
+        <h2>Select a Report</h2>
+        <p>Choose a report from the sidebar, configure your parameters, and click <strong>Run Report</strong> to generate results.</p>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+let reports = [];
+let selectedReport = null;
+let lastResult = null;
+let sortField = null;
+let sortDir = 'ASC';
+let currentTab = 'table';
+let showSQL = false;
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+async function init() {
+  updateClock();
+  setInterval(updateClock, 1000);
+  const res = await fetch('/api/reports');
+  const data = await res.json();
+  reports = data.reports;
+  renderReportList();
+}
+
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleString('en-GB', { hour12: false });
+}
+
+// ─── Report List ──────────────────────────────────────────────────────────────
+function renderReportList() {
+  const list = document.getElementById('reportList');
+  list.innerHTML = reports.map(r => `
+    <div class="report-card" id="rc-${r.id}" onclick="selectReport('${r.id}')">
+      <div class="rc-title">${r.title.replace(' Report', '')}</div>
+      <div class="rc-id">${r.id}</div>
+      <div class="rc-desc">${r.description}</div>
+    </div>
+  `).join('');
+}
+
+function selectReport(id) {
+  selectedReport = reports.find(r => r.id === id);
+  document.querySelectorAll('.report-card').forEach(c => c.classList.remove('active'));
+  document.getElementById(`rc-${id}`).classList.add('active');
+  renderParamForm(selectedReport);
+  document.getElementById('runBtn').disabled = false;
+  document.getElementById('htmlBtn').disabled = false;
+  document.getElementById('sqlToggle').style.display = 'block';
+  document.getElementById('reportTitle').textContent = selectedReport.title;
+  document.getElementById('content').innerHTML = `
+    <div class="welcome">
+      <div class="welcome-icon">⚙️</div>
+      <h2>Ready to Run</h2>
+      <p>Configure parameters if needed, then click <strong>Run Report</strong>.</p>
+    </div>`;
+  lastResult = null;
+}
+
+// ─── Param Form ───────────────────────────────────────────────────────────────
+function renderParamForm(report) {
+  const form = document.getElementById('paramForm');
+  if (!report.parameters || report.parameters.length === 0) {
+    form.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:4px;">This report has no parameters.</div>`;
+    return;
+  }
+  form.innerHTML = report.parameters.map(p => {
+    const required = p.required ? `<span class="param-required">*</span>` : '';
+    let control;
+    if (p.type === 'select') {
+      control = `<select class="param-control" id="param-${p.name}">
+        ${p.options.map(o => `<option value="${o}">${o || '— All —'}</option>`).join('')}
+      </select>`;
+    } else if (p.type === 'date') {
+      control = `<input type="date" class="param-control" id="param-${p.name}" value="${p.default || ''}"/>`;
+    } else {
+      control = `<input type="${p.type || 'text'}" class="param-control" id="param-${p.name}" value="${p.default || ''" placeholder="${p.label}"/>`;
+    }
+    return `<div class="param-group">
+      <label class="param-label">${p.label}${required}</label>
+      ${control}
+    </div>`;
+  }).join('');
+}
+
+function getParams() {
+  if (!selectedReport) return {};
+  const params = {};
+  selectedReport.parameters.forEach(p => {
+    const el = document.getElementById(`param-${p.name}`);
+    if (el) params[p.name] = el.value;
+  });
+  return params;
+}
+
+// ─── Run Report ───────────────────────────────────────────────────────────────
+async function runReport(format) {
+  if (!selectedReport) return;
+  const params = getParams();
+
+  if (format === 'html') {
+    // Open HTML report in new tab
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/api/reports/${selectedReport.id}/run`;
+    form.target = '_blank';
+    form.style.display = 'none';
+    const bodyInput = document.createElement('input');
+    bodyInput.type = 'hidden';
+    bodyInput.name = '_json';
+    bodyInput.value = JSON.stringify({ parameters: params, format: 'html' });
+    form.appendChild(bodyInput);
+    document.body.appendChild(form);
+    // Actually fetch and blob it
+    const res = await fetch(`/api/reports/${selectedReport.id}/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parameters: params, format: 'html' })
+    });
+    const html = await res.text();
+    const blob = new Blob([html], { type: 'text/html' });
+    window.open(URL.createObjectURL(blob), '_blank');
+    return;
+  }
+
+  // JSON run
+  setContent('<div class="loading"><div class="spinner"></div> Running query…</div>');
+  try {
+    const res = await fetch(`/api/reports/${selectedReport.id}/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parameters: params, format: 'json' })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Report failed');
+    lastResult = data;
+    sortField = null; sortDir = 'ASC';
+    document.getElementById('tabGroup').style.display = 'flex';
+    document.getElementById('reportMeta').textContent =
+      `${data.rowCount} rows · ${new Date().toLocaleTimeString('en-GB')}`;
+    setTab('table');
+  } catch (err) {
+    setContent(`<div class="error-box">❌ ${err.message}</div>`);
+  }
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+function setTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab')[['table','sql','summary'].indexOf(tab)].classList.add('active');
+  if (!lastResult) return;
+  if (tab === 'table') renderTable(lastResult);
+  if (tab === 'sql') renderSQL();
+  if (tab === 'summary') renderSummary(lastResult);
+}
+
+// ─── Table View ───────────────────────────────────────────────────────────────
+function renderTable(data) {
+  const colDefs = selectedReport ? getColumnDefs() : {};
+  let rows = [...data.rows];
+  if (sortField) {
+    rows.sort((a, b) => {
+      const av = a[sortField], bv = b[sortField];
+      const c = typeof av === 'number' ? av - bv : String(av||'').localeCompare(String(bv||''));
+      return sortDir === 'ASC' ? c : -c;
+    });
+  }
+
+  const headers = data.columns.map(col => {
+    const label = colDefs[col] ? colDefs[col].label : col;
+    const cls = sortField === col ? (sortDir === 'ASC' ? 'sort-asc' : 'sort-desc') : '';
+    return `<th class="${cls}" onclick="sortBy('${col}')">${label}</th>`;
+  }).join('');
+
+  const bodyRows = rows.length === 0
+    ? `<tr class="empty-row"><td colspan="${data.columns.length}">No records match the selected filters.</td></tr>`
+    : rows.map((row, i) => {
+        const cells = data.columns.map(col => {
+          const type = colDefs[col] ? colDefs[col].type : 'text';
+          return `<td>${formatCell(row[col], type)}</td>`;
+        }).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+
+  // Stats bar
+  let statsHtml = `<div class="stat-item"><div class="sn">${rows.length}</div><div class="sl">Total Rows</div></div>`;
+  const summaryEntries = Object.entries(data.summary || {});
+  summaryEntries.slice(0, 3).forEach(([field, stats]) => {
+    const cd = colDefs[field];
+    if (!cd) return;
+    const val = cd.type === 'currency'
+      ? `£${Number(stats.sum).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`
+      : Number(stats.sum).toLocaleString('en-GB', { maximumFractionDigits: 1 });
+    statsHtml += `<div class="stat-item"><div class="sn" style="font-size:15px;">${val}</div><div class="sl">Total ${cd.label}</div></div>`;
+  });
+
+  setContent(`
+    <div class="stats-bar">${statsHtml}</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>${headers}</tr></thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>
+  `);
+}
+
+function sortBy(field) {
+  if (sortField === field) sortDir = sortDir === 'ASC' ? 'DESC' : 'ASC';
+  else { sortField = field; sortDir = 'ASC'; }
+  renderTable(lastResult);
+}
+
+function formatCell(value, type) {
+  if (value === null || value === undefined) return '—';
+  switch (type) {
+    case 'currency':
+      return typeof value === 'number'
+        ? `£${value.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`
+        : value;
+    case 'number':
+      return typeof value === 'number' ? value.toLocaleString('en-GB') : value;
+    case 'badge':
+      return `<span class="badge badge-${String(value).toLowerCase().replace(/\s+/g, '-')}">${value}</span>`;
+    default:
+      return String(value);
+  }
+}
+
+function getColumnDefs() {
+  const r = reports.find(r => r.id === selectedReport.id);
+  return {}; // Server-side defs; client uses them for labels/types via the definition field
+}
+
+// ─── SQL View ─────────────────────────────────────────────────────────────────
+async function renderSQL() {
+  const params = getParams();
+  try {
+    const res = await fetch(`/api/reports/${selectedReport.id}/preview-query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parameters: params })
+    });
+    const data = await res.json();
+    const highlighted = data.sql
+      .replace(/\b(SELECT|FROM|WHERE|GROUP BY|ORDER BY|LIMIT|WITH|AS|INNER|JOIN|ON|AND|OR|BETWEEN|IN|LIKE)\b/g, '<span class="sql-keyword">$1</span>')
+      .replace(/'[^']*'/g, m => `<span class="sql-string">${m}</span>`);
+    setContent(`<div class="sql-panel">${highlighted}</div>`);
+  } catch (e) {
+    setContent(`<div class="error-box">Could not preview SQL: ${e.message}</div>`);
+  }
+}
+
+async function toggleSQL() {
+  if (!selectedReport) return;
+  setTab('sql');
+}
+
+// ─── Summary View ─────────────────────────────────────────────────────────────
+function renderSummary(data) {
+  const entries = Object.entries(data.summary || {});
+  if (entries.length === 0) {
+    setContent('<div class="welcome"><div class="welcome-icon">📊</div><h2>No numeric summaries</h2><p>This report does not have numeric columns to summarise.</p></div>');
+    return;
+  }
+  const cards = entries.map(([field, stats]) => `
+    <div style="background:#fff;border:1px solid var(--border);border-radius:7px;padding:20px;margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;">${field}</div>
+      <div style="display:flex;gap:0;">
+        ${Object.entries(stats).map(([stat, val]) => `
+          <div style="flex:1;text-align:center;border-right:1px solid var(--border);padding:10px 0;">
+            <div style="font-size:16px;font-weight:700;font-family:var(--mono);color:var(--navy);">
+              ${typeof val === 'number' && val > 1000 ? '£'+val.toLocaleString('en-GB',{minimumFractionDigits:2}) : val.toLocaleString('en-GB',{maximumFractionDigits:2})}
+            </div>
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-top:3px;">${stat}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+  setContent(cards);
+}
+
+function setContent(html) {
+  document.getElementById('content').innerHTML = html;
+}
+
+init();
+</script>
+</body>
+</html>
